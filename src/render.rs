@@ -51,6 +51,7 @@ impl Renderer {
             unsafe {
                 gl::Enable(gl::MULTISAMPLE);
                 gl::Enable(gl::DEPTH_TEST);
+                gl::Enable(gl::CULL_FACE);
             }
 
             self.has_init = true;
