@@ -1,7 +1,7 @@
-use meliusgfx::material::Material;
-use meliusgfx::transform::Transform;
+use meliusgfx::material::{Material, AttributeType};
 use meliusgfx::texture::{Texture, WrappingType, FilteringType};
 use glfw::Context;
+use cgmath::{Deg, Matrix, vec3, Matrix4, perspective};
 
 static VERTEX_SHADER: &str = "
 #version 330 core
@@ -49,19 +49,82 @@ fn main() {
     window.set_key_polling(true);
     window.make_current();
 
-    let mut object_manager = meliusgfx::object::ObjectManager::new();
-    object_manager.init(|symbol| { window.get_proc_address(symbol) });
+    let mut renderer = meliusgfx::render::Renderer::new();
+    renderer.init(|symbol| { window.get_proc_address(symbol) });
 
-
-    object_manager.create_object(
-        4,
+    let object = renderer.create_object_without_indices(
+        36,
         vec![
-            (-0.5, -0.5,  0.0),
-            (-0.5,  0.5,  0.0),
-            ( 0.5, -0.5,  0.0),
-            ( 0.5,  0.5,  0.0),
+            (-0.5, -0.5, -0.5),
+            ( 0.5, -0.5, -0.5),
+            ( 0.5,  0.5, -0.5),
+            ( 0.5,  0.5, -0.5),
+            (-0.5,  0.5, -0.5),
+            (-0.5, -0.5, -0.5),
+            (-0.5, -0.5,  0.5),
+            ( 0.5, -0.5,  0.5),
+            ( 0.5,  0.5,  0.5),
+            ( 0.5,  0.5,  0.5),
+            (-0.5,  0.5,  0.5),
+            (-0.5, -0.5,  0.5),
+            (-0.5,  0.5,  0.5),
+            (-0.5,  0.5, -0.5),
+            (-0.5, -0.5, -0.5),
+            (-0.5, -0.5, -0.5),
+            (-0.5, -0.5,  0.5),
+            (-0.5,  0.5,  0.5),
+            ( 0.5,  0.5,  0.5),
+            ( 0.5,  0.5, -0.5),
+            ( 0.5, -0.5, -0.5),
+            ( 0.5, -0.5, -0.5),
+            ( 0.5, -0.5,  0.5),
+            ( 0.5,  0.5,  0.5),
+            (-0.5, -0.5, -0.5),
+            ( 0.5, -0.5, -0.5),
+            ( 0.5, -0.5,  0.5),
+            ( 0.5, -0.5,  0.5),
+            (-0.5, -0.5,  0.5),
+            (-0.5, -0.5, -0.5),
+            (-0.5,  0.5, -0.5),
+            ( 0.5,  0.5, -0.5),
+            ( 0.5,  0.5,  0.5),
+            ( 0.5,  0.5,  0.5),
+            (-0.5,  0.5,  0.5),
+            (-0.5,  0.5, -0.5),
         ],
         vec![
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
             (1.0, 1.0, 1.0, 1.0),
             (1.0, 1.0, 1.0, 1.0),
             (1.0, 1.0, 1.0, 1.0),
@@ -69,12 +132,41 @@ fn main() {
         ],
         vec![
             (0.0, 0.0),
+            (1.0, 0.0),
+            (1.0, 1.0),
+            (1.0, 1.0),
+            (0.0, 1.0),
+            (0.0, 0.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (1.0, 1.0),
+            (1.0, 1.0),
+            (0.0, 1.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (1.0, 1.0),
+            (0.0, 1.0),
+            (0.0, 1.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (1.0, 0.0),
+            (1.0, 1.0),
+            (0.0, 1.0),
+            (0.0, 1.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
             (0.0, 1.0),
             (1.0, 1.0),
             (1.0, 0.0),
-        ],
-        vec![
-            0, 1, 3, 3, 2, 0
+            (1.0, 0.0),
+            (0.0, 0.0),
+            (0.0, 1.0),
+            (0.0, 1.0),
+            (1.0, 1.0),
+            (1.0, 0.0),
+            (1.0, 0.0),
+            (0.0, 0.0),
+            (0.0, 1.0)
         ],
         Material::from_shaders(
             VERTEX_SHADER.clone().to_string(),
@@ -86,21 +178,30 @@ fn main() {
                     FilteringType::Linear,
                     0,
                     Texture::get_from_location("wall.jpg"),
-                )
-            ]
+                ),
+            ],
+            vec![]
         ),
-        Transform::identity()
     );
 
-
-
     while !window.should_close() {
-        object_manager.render();
-        object_manager.resize_viewport(window.get_size().0, window.get_size().1);
+        renderer.render();
+        renderer.resize_viewport(window.get_size().0, window.get_size().1);
+
+        let projection: Matrix4<f32> = perspective(Deg(90.0), window.get_size().0 as f32 / window.get_size().1 as f32, 0.1, 1000.0);
+        let mut model: Matrix4<f32> = Matrix4::<f32>::from_angle_x(Deg(glfw.get_time() as f32 * 30.0));
+        model = model * Matrix4::from_angle_z(Deg(glfw.get_time() as f32 * 30.0));
+
+        renderer.set_material_attribute(object, "model", AttributeType::Matrix4(
+            model.as_ptr()));
+        renderer.set_material_attribute(object, "view", AttributeType::Matrix4(
+            &Matrix4::<f32>::from_translation(vec3(0.0, 0.0, -2.0))[0][0]));
+        renderer.set_material_attribute(object, "projection", AttributeType::Matrix4(
+            projection.as_ptr()));
 
         window.swap_buffers();
         glfw.poll_events();
     }
 
-    object_manager.terminate();
+    renderer.terminate();
 }

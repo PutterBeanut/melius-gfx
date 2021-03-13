@@ -2,8 +2,7 @@ use std::ffi::c_void;
 use std::ptr;
 use cgmath::Matrix4;
 
-use crate::material::Material;
-use crate::transform::Transform;
+use crate::material::{Material, AttributeType, set_attribute};
 
 // Used for readability instead of using just `4`
 //
@@ -27,26 +26,20 @@ struct Buffers {
 // Data-Oriented struct that controls what happens with each created object and renders them.
 //
 // Should be exposed to the user.
-pub struct ObjectManager {
+pub struct Renderer {
     has_init: bool,
-
     buffers: Vec<Buffers>,
     materials: Vec<Material>,
-
-    objects: Vec<Matrix4<f32>>,
-    cameras: Vec<(Matrix4<f32>, Matrix4<f32>)>,
-    screen_aspect_ratio: f32,
+    attribute_queue: Vec<Vec<(String, AttributeType)>>
 }
 
-impl ObjectManager {
+impl Renderer {
     pub fn new() -> Self {
-        ObjectManager {
+        Renderer {
             has_init: false,
             buffers: vec![],
             materials: vec![],
-            objects: vec![],
-            cameras: vec![],
-            screen_aspect_ratio: 1.0
+            attribute_queue: vec![]
         }
     }
 
@@ -72,8 +65,7 @@ impl ObjectManager {
                          colors: Vec<(f32, f32, f32, f32)>,
                          tex_coords: Vec<(f32, f32)>,
                          indices: Vec<u32>,
-                         material: Material,
-                         transform: Transform) {
+                         material: Material) -> u32 {
 
         let pos_stride: f32 = positions.len() as f32 / vertex_count as f32;
         if pos_stride != (pos_stride as usize) as f32 {
@@ -167,28 +159,143 @@ impl ObjectManager {
             index_size: indices.len() as i32,
         });
         self.materials.push(material);
-        self.objects.push(transform.get_matrix());
+        self.attribute_queue.push(vec![]);
+
+        self.buffers.len() as u32 - 1u32
+    }
+
+    // Similar to the `create_object` function but does not require indices
+    // and therefore used `gl::DrawArrays` as opposed to `gl::DrawElements`
+    pub fn create_object_without_indices(&mut self,
+                         vertex_count: u32,
+                         positions: Vec<(f32, f32, f32)>,
+                         colors: Vec<(f32, f32, f32, f32)>,
+                         tex_coords: Vec<(f32, f32)>,
+                         material: Material) -> u32 {
+
+        let pos_stride: f32 = positions.len() as f32 / vertex_count as f32;
+        if pos_stride != (pos_stride as usize) as f32 {
+            panic!("The `vertex_count` is incorrect");
+        }
+
+        let buffer_data: Vec<f32> = {
+            let mut buffer_data: Vec<f32> = vec![];
+
+            for i in 0..positions.len() {
+                buffer_data.extend(vec![
+                    positions[i].0,
+                    positions[i].1,
+                    positions[i].2,
+                    colors[i].0,
+                    colors[i].1,
+                    colors[i].2,
+                    colors[i].3,
+                    tex_coords[i].0,
+                    tex_coords[i].1,
+                ]);
+            }
+
+            buffer_data
+        };
+
+        let (vao, vbo) = unsafe {
+            let mut vao = 0u32;
+            gl::GenVertexArrays(1, &mut vao);
+            gl::BindVertexArray(vao);
+
+            let mut vbo = 0u32;
+            gl::GenBuffers(1, &mut vbo);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (FOUR_BYTES * buffer_data.len()) as isize,
+                buffer_data.as_ptr() as *const c_void,
+                gl::DYNAMIC_DRAW
+            );
+
+            let stride: i32 = (FOUR_BYTES * (buffer_data.len() / vertex_count as usize)) as i32;
+
+            gl::EnableVertexAttribArray(0);
+            gl::VertexAttribPointer(
+                0,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                stride,
+                0usize as *const c_void
+            );
+
+            gl::EnableVertexAttribArray(1);
+            gl::VertexAttribPointer(
+                1,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                stride,
+                12usize as *const c_void
+            );
+
+            gl::EnableVertexAttribArray(2);
+            gl::VertexAttribPointer(
+                2,
+                2,
+                gl::FLOAT,
+                gl::FALSE,
+                stride,
+                28usize as *const c_void
+            );
+
+            (vao, vbo)
+        };
+
+        self.buffers.push(Buffers {
+            vao,
+            vbo,
+            ibo: 0,
+            index_size: vertex_count as i32,
+        });
+        self.materials.push(material);
+        self.attribute_queue.push(vec![]);
+
+        self.buffers.len() as u32 - 1u32
+    }
+
+    pub fn set_material_attribute(&mut self, object: u32, n: &str, t: AttributeType) {
+        self.attribute_queue[object as usize].push((n.to_string(), t));
     }
 
     // Draws all created objects using the camera specified
     pub fn render(&mut self) {
         unsafe {
-            gl::ClearColor(0.3, 0.3, 0.3, 1.0);
+            gl::ClearColor(0.05, 0.05, 0.05, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             let mut i = 0usize;
             for object in self.buffers.iter() {
-
                 gl::BindVertexArray(object.vao);
-                self.materials[i].use_material(self.screen_aspect_ratio);
+                self.materials[i].use_material();
 
-                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, object.ibo);
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    object.index_size,
-                    gl::UNSIGNED_INT,
-                    ptr::null()
-                );
+                for (attribute_name, attribute_type) in self.attribute_queue[i].iter() {
+                    set_attribute(self.materials[i].get_program_id(), (*attribute_name).clone(), (*attribute_type).clone());
+                }
+                self.attribute_queue[i] = Vec::new();
+
+                if object.ibo == 0 {
+                    gl::BindBuffer(gl::ARRAY_BUFFER, object.vbo);
+                    gl::DrawArrays(
+                        gl::TRIANGLES,
+                        0,
+                        object.index_size,
+                    );
+                } else {
+                    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, object.ibo);
+                    gl::DrawElements(
+                        gl::TRIANGLES,
+                        object.index_size,
+                        gl::UNSIGNED_INT,
+                        ptr::null()
+                    );
+                }
 
                 i += 1;
             }
@@ -199,8 +306,6 @@ impl ObjectManager {
         unsafe {
             gl::Viewport(0, 0, x, y);
         }
-
-        self.screen_aspect_ratio = x as f32 / y as f32;
     }
 
     // This will destroy all buffers and free the occupied memory.

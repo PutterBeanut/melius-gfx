@@ -1,5 +1,4 @@
-pub mod object;
+pub mod render;
 pub mod shader;
 pub mod material;
 pub mod texture;
-pub mod transform;
