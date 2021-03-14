@@ -8,7 +8,7 @@ description = "WIP OpenGL wrapper for Melius"
 homepage = "https://github.com/putterbeanut/melius-gfx"
 repository = "https://github.com/putterbeanut/melius-gfx"
 keywords = ["melius"]
-categories = ["graphics", "ui"]
+categories = ["graphics", "gui"]
 
 [dependencies]
 gl = "0.14.0"
