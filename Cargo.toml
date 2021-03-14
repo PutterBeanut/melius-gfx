@@ -7,6 +7,4 @@ description = "Safe OpenGL wrapper for Melius"
 
 [dependencies]
 gl = "0.14.0"
-cgmath = "0.18.0"
-glfw = "0.41.0"
 image = "0.23.14"

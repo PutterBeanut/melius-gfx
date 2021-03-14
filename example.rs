@@ -68,9 +68,9 @@ fn main() {
         vec![],
         vec![
             (0.0, 0.0),
-            (1.0, 0.0),
-            (1.0, 1.0),
-            (0.0, 1.0),
+            (0.5, 0.0),
+            (0.5, 0.5),
+            (0.0, 0.5),
             (0.0, 0.0),
             (1.0, 0.0),
             (1.0, 1.0),
@@ -94,7 +94,7 @@ fn main() {
                     FilteringType::Linear,
                     FilteringType::Linear,
                     0,
-                    Texture::get_from_location("wall.jpg"),
+                    Texture::get_from_location("texture.png"),
                 ),
             ],
             vec![]
