@@ -2,6 +2,7 @@
 name = "meliusgfx"
 version = "0.1.0"
 edition = "2018"
+license = "Apache 2.0"
 authors = ["PutterBeanut <putterbeanutdev@gmail.com>"]
 description = "WIP OpenGL wrapper for Melius"
 homepage = "https://github.com/putterbeanut/melius-gfx"
