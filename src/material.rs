@@ -3,9 +3,6 @@ use std::ffi::CStr;
 use crate::texture::Texture;
 use crate::shader;
 
-use cgmath::{Deg, Matrix4, perspective, vec3};
-use cgmath::prelude::*;
-
 #[derive(Copy, Clone)]
 pub enum AttributeType {
     Float1(f32),
