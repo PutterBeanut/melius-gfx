@@ -1,4 +1,5 @@
 use std::ffi::CStr;
+use std::fs;
 
 use crate::texture::Texture;
 use crate::shader;
@@ -56,12 +57,33 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn from_shaders(vertex_shader: String, fragment_shader: String, textures: Vec<Texture>, attributes: Vec<(&str, AttributeType)>) -> Self {
+    pub fn from_shaders(vertex_shader: &str, fragment_shader: &str, textures: Vec<Texture>,
+        attributes: Vec<(&str, AttributeType)>) -> Self {
         Material {
-            program: shader::compile_program(vertex_shader, fragment_shader),
+            program: shader::compile_program(vertex_shader.to_string(), fragment_shader.to_string()),
             attributes: attributes.into_iter().map(|(n, t)| (n.to_string(), t)).collect::<Vec<_>>(),
             textures,
         }
+    }
+
+    pub fn from_shader_files(vertex_shader_path: &str, fragment_shader_path: &str, textures: Vec<Texture>,
+        attributes: Vec<(&str, AttributeType)>) -> Self {
+
+            let vertex_source = Material::get_shader_file(vertex_shader_path);
+            let fragment_source = Material::get_shader_file(fragment_shader_path);
+
+            Material {
+                program: shader::compile_program(vertex_source.to_string(), fragment_source.to_string()),
+                attributes: attributes.into_iter().map(|(n, t)| (n.to_string(), t)).collect::<Vec<_>>(),
+                textures,
+            }
+    }
+
+    fn get_shader_file(path: &str) -> String {
+        let error = format!("The path `{0}` does not exist!", path);
+        let contents = fs::read_to_string(path).expect(error.as_str());
+
+        contents
     }
 
     pub fn use_material(&mut self) {

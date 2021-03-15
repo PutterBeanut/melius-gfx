@@ -13,3 +13,7 @@ categories = ["graphics", "gui"]
 [dependencies]
 gl = "0.14.0"
 image = "0.23.14"
+cgmath = "*"
+
+[dependencies.glfw]
+git = "https://github.com/bjz/glfw-rs.git"

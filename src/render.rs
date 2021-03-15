@@ -3,6 +3,15 @@ use std::ptr;
 
 use crate::material::{Material, AttributeType, set_attribute};
 
+// In the init process, one of the parameters is a `FaceCulling` enum
+// to give the user more control
+pub enum FaceCulling {
+    None,
+    Front,
+    Back,
+    FrontAndBack,
+}
+
 // Used for readability instead of using just `4`
 //
 // Should NOT be exposed to the user.
@@ -44,15 +53,28 @@ impl Renderer {
     }
 
     // Loads the GL functions, therefore requiring a context to load their proc address
-    pub fn init<F>(&mut self, mut address: F)
+    pub fn init<F>(&mut self, mut address: F, multisample: bool, depth_test: bool, stencil_test: bool, cull_face: FaceCulling)
         where F: FnMut(&'static str) -> *const c_void {
         if !self.has_init {
             gl::load_with(|symbol| { address(symbol) });
             unsafe {
-                gl::Enable(gl::MULTISAMPLE);
-                gl::Enable(gl::DEPTH_TEST);
-                gl::Enable(gl::CULL_FACE);
-                gl::CullFace(gl::FRONT);
+                if multisample { gl::Enable(gl::MULTISAMPLE) }
+                if depth_test { gl::Enable(gl::DEPTH_TEST) }
+                match cull_face {
+                    Front => {
+                        gl::Enable(gl::CULL_FACE);
+                        gl::CullFace(gl::FRONT);
+                    },
+                    Back => {
+                        gl::Enable(gl::CULL_FACE);
+                        gl::CullFace(gl::BACK);
+                    },
+                    FrontAndBack => {
+                        gl::Enable(gl::CULL_FACE);
+                        gl::CullFace(gl::FRONT_AND_BACK);
+                    }
+                    _ => {}
+                }
             }
 
             self.has_init = true;
@@ -70,6 +92,9 @@ impl Renderer {
         indices: Vec<u32>,
         material: Material) -> u32
     {
+
+        if !self.has_init { panic!("The renderer has not been initialized yet! Try calling `Renderer::init(&mut self, ...)`") }
+
         let stride: f32 = positions.len() as f32 / vertex_count as f32;
         if stride != (stride as usize) as f32 {
             panic!("The `vertex_count` is incorrect");
