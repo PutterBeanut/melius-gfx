@@ -53,23 +53,25 @@ impl Renderer {
     }
 
     // Loads the GL functions, therefore requiring a context to load their proc address
-    pub fn init<F>(&mut self, mut address: F, multisample: bool, depth_test: bool, stencil_test: bool, cull_face: FaceCulling)
+    pub fn init<F>(&mut self, mut address: F, multisample: bool, depth_test: bool, cull_face: FaceCulling)
         where F: FnMut(&'static str) -> *const c_void {
         if !self.has_init {
             gl::load_with(|symbol| { address(symbol) });
             unsafe {
+                // gl::DebugMessageCallback();
+
                 if multisample { gl::Enable(gl::MULTISAMPLE) }
                 if depth_test { gl::Enable(gl::DEPTH_TEST) }
                 match cull_face {
-                    Front => {
+                    FaceCulling::Front => {
                         gl::Enable(gl::CULL_FACE);
                         gl::CullFace(gl::FRONT);
                     },
-                    Back => {
+                    FaceCulling::Back => {
                         gl::Enable(gl::CULL_FACE);
                         gl::CullFace(gl::BACK);
                     },
-                    FrontAndBack => {
+                    FaceCulling::FrontAndBack => {
                         gl::Enable(gl::CULL_FACE);
                         gl::CullFace(gl::FRONT_AND_BACK);
                     }

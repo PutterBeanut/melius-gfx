@@ -41,7 +41,7 @@ pub enum AttributeType {
     Matrix4x3(*const f32),
 }
 
-fn c_str(value: &str) -> *const i8 {
+pub(crate) fn c_str(value: &str) -> *const i8 {
     let format = format!("{0}\0", value);
     let as_str = format.as_str();
     let as_bytes = as_str.as_bytes();

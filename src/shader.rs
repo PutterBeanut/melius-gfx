@@ -7,12 +7,16 @@ pub enum ShaderType {
 }
 
 fn compile_shader(shader_type: ShaderType, source: String) -> u32 {
+    let shader_name;
+
     let shader = unsafe {
         let shader_type = match shader_type {
             ShaderType::Vertex => {
+                shader_name = "Vertex Shader: ";
                 gl::VERTEX_SHADER
             },
             ShaderType::Fragment => {
+                shader_name = "Fragment Shader: ";
                 gl::FRAGMENT_SHADER
             }
         };
@@ -41,7 +45,8 @@ fn compile_shader(shader_type: ShaderType, source: String) -> u32 {
             );
 
             panic!(
-                "{}",
+                "{}{}",
+                shader_name,
                 str::from_utf8(&info_log)
                     .ok()
                     .expect("ShaderInfoLog not valid utf8")
