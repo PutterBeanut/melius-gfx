@@ -13,5 +13,5 @@ uniform mat4 projection;
 void main() {
     fragmentColor = vertexColor;
     fragmentTexCoords = texCoords;
-    gl_Position = vec4(vertexPosition, 1);
+    gl_Position = projection * view * model * vec4(vertexPosition, 1);
 }

@@ -22,6 +22,14 @@
       <sourceFolder url="file://$MODULE_DIR$/target/debug/build/rayon-943efe6dce582df9/out" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/target/debug/build/rayon-core-28cae41c90cc9711/out" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/target/debug/build/winapi-1e3162d5cfe1150a/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/cgmath-813231181c82a027/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/getrandom-d6e9c1627daeb1d0/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/glutin_egl_sys-ba3c492ad9f49af9/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/glutin_wgl_sys-034d4c20d9cf269b/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/libc-686d03627377d27d/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/libc-d0b32235d5d2f8ce/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/winapi-402facd83e172637/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
