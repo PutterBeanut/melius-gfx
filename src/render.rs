@@ -218,7 +218,7 @@ impl Renderer {
     // Draws all created objects
     pub fn render(&mut self) {
         unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             let mut i = 0usize;

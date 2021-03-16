@@ -1,24 +1,24 @@
 use meliusgfx::material::{Material, AttributeType};
 use meliusgfx::texture::{Texture, WrappingType, FilteringType};
 use meliusgfx::render::{Renderer, FaceCulling};
-use glutin::window::WindowBuilder;
-use glutin::event_loop::{EventLoop, ControlFlow};
-use glutin::event::{Event, WindowEvent};
 use cgmath::{Matrix4, perspective, Deg, vec3};
 use cgmath::prelude::*;
-use glutin::ContextBuilder;
-use glutin::dpi::PhysicalSize;
+use glfw::Context;
 
 fn main() {
 
-    let el = EventLoop::new();
-    let wb = WindowBuilder::new().with_title("Window Test").with_inner_size(PhysicalSize { width: 800.0, height: 600.0 });
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-    let windowed_context = ContextBuilder::new().build_windowed(wb, &el).unwrap();
-    let windowed_context = unsafe { windowed_context.make_current().unwrap() };
+    glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
+
+    let (mut window, _) = glfw.create_window(800, 600, "Hello this is window", glfw::WindowMode::Windowed)
+        .expect("Failed to create GLFW window.");
+
+    window.set_key_polling(true);
+    window.make_current();
 
     let mut renderer = Renderer::new();
-    renderer.init(|address| { windowed_context.get_proc_address(address) }, true, true, FaceCulling::Front);
+    renderer.init(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front);
 
     let object = renderer.create_object(
         8,
@@ -69,16 +69,7 @@ fn main() {
     );
 
     let mut time = 0f32;
-    el.run(move |event, _, control_flow| {
-        match event {
-            Event::LoopDestroyed => return,
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::Resized(physical_size) => windowed_context.resize(physical_size),
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                _ => (),
-            },
-            _ => (),
-        }
+    while !window.should_close() {
 
         let projection: Matrix4<f32> = perspective(Deg(90.0),
                                                    800.0 / 600.0, 0.1, 1000.0);
@@ -96,7 +87,8 @@ fn main() {
 
         time += 0.01;
 
-        windowed_context.swap_buffers().unwrap();
-    });
+        window.swap_buffers();
+        glfw.poll_events();
+    }
 
 }
