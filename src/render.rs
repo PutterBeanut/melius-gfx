@@ -1,7 +1,8 @@
-use std::ffi::c_void;
+use std::ffi::{c_void, CStr};
 use std::ptr;
+use gl::types::*;
 
-use crate::material::{Material, AttributeType, set_attribute};
+use crate::material::{Material, AttributeType, set_attribute, c_str};
 
 // In the init process, one of the parameters is a `FaceCulling` enum
 // to give the user more control
@@ -58,7 +59,9 @@ impl Renderer {
         if !self.has_init {
             gl::load_with(|symbol| { address(symbol) });
             unsafe {
-                // gl::DebugMessageCallback();
+                gl::Enable(gl::DEBUG_OUTPUT);
+                gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
+                gl::DebugMessageCallback(Some(message_callback), 0 as *const c_void);
 
                 if multisample { gl::Enable(gl::MULTISAMPLE) }
                 if depth_test { gl::Enable(gl::DEPTH_TEST) }
@@ -274,4 +277,8 @@ impl Renderer {
             i += 1;
         }
     }
+}
+
+extern "system" fn message_callback(source: u32, ty:  u32, id: u32, severity: u32, length: i32, message: *const i8, user_param: *mut c_void) {
+    unsafe { println!("GL CALLBACK: ... message = {}", CStr::from_ptr(message).to_str().unwrap()); }
 }

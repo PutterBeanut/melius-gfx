@@ -30,6 +30,7 @@
       <sourceFolder url="file://$MODULE_DIR$/target/debug/build/libc-d0b32235d5d2f8ce/out" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/target/debug/build/winapi-402facd83e172637/out" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/libc-86d8ad4cc7436677/out" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
