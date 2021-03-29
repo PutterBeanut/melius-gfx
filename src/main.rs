@@ -1,12 +1,11 @@
 use meliusgfx::material::{Material, AttributeType};
 use meliusgfx::texture::{Texture, WrappingType, FilteringType};
-use meliusgfx::render::{Renderer, FaceCulling};
+use meliusgfx::render::{Renderer, FaceCulling, DebugFilter};
 use cgmath::{Matrix4, perspective, Deg, vec3};
 use cgmath::prelude::*;
 use glfw::Context;
 
 fn main() {
-
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
@@ -19,6 +18,7 @@ fn main() {
 
     let mut renderer = Renderer::new();
     renderer.init(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front);
+    renderer.set_debug_filters(vec![DebugFilter::Info]);
 
     let object = renderer.create_object(
         8,

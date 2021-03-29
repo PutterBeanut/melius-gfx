@@ -1,8 +1,20 @@
 use std::ffi::{c_void, CStr};
 use std::ptr;
-use gl::types::*;
 
-use crate::material::{Material, AttributeType, set_attribute, c_str};
+use crate::material::{Material, AttributeType, set_attribute};
+
+static mut DEBUG_FILTERS: [DebugFilter; 4] = [DebugFilter::None, DebugFilter::None, DebugFilter::None, DebugFilter::None];
+
+// The renderer takes in an array of DebugFilters to filter out one or more
+// specific types of messages from the OpenGL callbacks
+#[derive(Copy, Clone)]
+pub enum DebugFilter {
+    None,
+    Info,
+    Low,
+    Medium,
+    High
+}
 
 // In the init process, one of the parameters is a `FaceCulling` enum
 // to give the user more control
@@ -83,6 +95,14 @@ impl Renderer {
             }
 
             self.has_init = true;
+        }
+    }
+
+    pub fn set_debug_filters(&self, filters: Vec<DebugFilter>) {
+        if filters.len() > 4 { panic!("Cannot have a debug filter count greater than 4!") }
+
+        for i in 0..filters.len() {
+            unsafe { DEBUG_FILTERS[i] = filters[i].clone(); }
         }
     }
 
@@ -279,6 +299,60 @@ impl Renderer {
     }
 }
 
-extern "system" fn message_callback(source: u32, ty:  u32, id: u32, severity: u32, length: i32, message: *const i8, user_param: *mut c_void) {
-    unsafe { println!("GL CALLBACK: ... message = {}", CStr::from_ptr(message).to_str().unwrap()); }
+extern "system" fn message_callback(_: u32, _:  u32, _: u32, severity: u32, _: i32, message: *const i8, _: *mut c_void) {
+    let mut severity_str = String::new();
+    let mut is_filtered = false;
+
+    if severity == gl::DEBUG_SEVERITY_NOTIFICATION {
+        unsafe {
+            for filter in DEBUG_FILTERS.iter() {
+                match filter {
+                    DebugFilter::Info => { is_filtered = true; }
+                    _ => {}
+                }
+            }
+        }
+
+        severity_str = "Notification".to_string()
+    }
+    if severity == gl::DEBUG_SEVERITY_LOW {
+        unsafe {
+            for filter in DEBUG_FILTERS.iter() {
+                match filter {
+                    DebugFilter::Low => { is_filtered = true; }
+                    _ => {}
+                }
+            }
+        }
+
+        severity_str = "Low".to_string()
+    }
+    if severity == gl::DEBUG_SEVERITY_MEDIUM {
+        unsafe {
+            for filter in DEBUG_FILTERS.iter() {
+                match filter {
+                    DebugFilter::Medium => { is_filtered = true; }
+                    _ => {}
+                }
+            }
+        }
+
+        severity_str = "Medium".to_string()
+    }
+    if severity == gl::DEBUG_SEVERITY_HIGH {
+        unsafe {
+            for filter in DEBUG_FILTERS.iter() {
+                match filter {
+                    DebugFilter::High => { is_filtered = true; }
+                    _ => {}
+                }
+            }
+        }
+
+        severity_str = "High".to_string()
+    }
+
+    if is_filtered { return; }
+
+    unsafe { println!("GL CALLBACK (severity: {}): {}", severity_str, CStr::from_ptr(message).to_str().unwrap()); }
 }
