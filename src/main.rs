@@ -1,6 +1,6 @@
 use meliusgfx::material::{Material, AttributeType};
 use meliusgfx::texture::{Texture, WrappingType, FilteringType};
-use meliusgfx::render::{Renderer, FaceCulling, DebugFilter};
+use meliusgfx::render::{Renderer, FaceCulling, DebugFilter, Vertex};
 use cgmath::{Matrix4, perspective, Deg, vec3};
 use cgmath::prelude::*;
 use glfw::Context;
@@ -16,34 +16,70 @@ fn main() {
     window.set_key_polling(true);
     window.make_current();
 
-    let mut renderer = Renderer::new();
-    renderer.init(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front);
+    let mut renderer = Renderer::new(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front);
     renderer.set_debug_filters(vec![DebugFilter::Info]);
 
+    let mut vertices = vec![
+        Vertex {
+            position: (-0.5,  0.5,  0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: (-0.5,  0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: ( 0.5,  0.5,  0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: ( 0.5,  0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: ( 0.5, -0.5,  0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: ( 0.5, -0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: (-0.5, -0.5,  0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: (-0.5, -0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: (-0.5, -0.5, -0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: (-0.5, -0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: (-0.5,  0.5, -0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: (-0.5,  0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: ( 0.5,  0.5, -0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: ( 0.5,  0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+        Vertex {
+            position: ( 0.5, -0.5, -0.5),
+            color: (1.0, 1.0, 1.0, 1.0),
+            tex_coords: ( 0.5, -0.5),
+            normals: (0.0, 0.0, 0.0),
+            texture_id: 0.0
+        },
+    ];
+
     let object = renderer.create_object(
-        8,
-        vec![
-            (-0.5,  0.5,  0.5),
-            ( 0.5,  0.5,  0.5),
-            ( 0.5, -0.5,  0.5),
-            (-0.5, -0.5,  0.5),
-            (-0.5, -0.5, -0.5),
-            (-0.5,  0.5, -0.5),
-            ( 0.5,  0.5, -0.5),
-            ( 0.5, -0.5, -0.5),
-        ],
-        vec![],
-        vec![
-            (-0.5,  0.5),
-            ( 0.5,  0.5),
-            ( 0.5, -0.5),
-            (-0.5, -0.5),
-            (-0.5, -0.5),
-            (-0.5,  0.5),
-            ( 0.5,  0.5),
-            ( 0.5, -0.5),
-        ],
-        vec![],
+        vertices.clone(),
         vec![
             0, 1, 2, 2, 3, 0,
             6, 7, 2, 2, 1, 6,

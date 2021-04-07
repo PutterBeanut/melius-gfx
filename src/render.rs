@@ -1,5 +1,6 @@
 use std::ffi::{c_void, CStr};
 use std::ptr;
+use memoffset::offset_of;
 
 use crate::material::{Material, AttributeType, set_attribute};
 
@@ -38,17 +39,39 @@ static FOUR_BYTES: usize = 4;
 //
 // Should NOT be exposed to the user.
 struct Buffers {
-    vao: u32,
-    vbo: u32,
-    ibo: u32,
-    index_size: i32,
+    pub vao: u32,
+    pub vbo: u32,
+    pub ibo: u32,
+    pub index_size: i32,
+}
+
+// Public types used for the `Vertex` struct.
+//
+// Should be exposed to the user.
+pub type Position = (f32, f32, f32);
+pub type Color = (f32, f32, f32, f32);
+pub type TexCoords = (f32, f32);
+pub type Normals = (f32, f32, f32);
+pub type TextureID = f32;
+
+// Used for the `Vertex` struct to get the amount of floats in the entire struct
+static VERTEX_DATA_SIZE: isize = 13;
+
+// Public struct exposed to the user that allows for the creation of objects.
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct Vertex {
+    pub position: Position,
+    pub color: Color,
+    pub tex_coords: TexCoords,
+    pub normals: Normals,
+    pub texture_id: TextureID,
 }
 
 // Data-Oriented struct that controls what happens with each created object and renders them.
 //
 // Should be exposed to the user.
 pub struct Renderer {
-    has_init: bool,
     buffers: Vec<Buffers>,
     materials: Vec<Material>,
     attribute_queue: Vec<Vec<(String, AttributeType)>>,
@@ -56,45 +79,39 @@ pub struct Renderer {
 
 #[allow(unused_assignments)]
 impl Renderer {
-    pub fn new() -> Self {
+    // Loads the GL functions, therefore requiring a context to load their proc address
+    pub fn new<F>(mut address: F, multisample: bool, depth_test: bool, cull_face: FaceCulling) -> Self
+        where F: FnMut(&'static str) -> *const c_void {
+        gl::load_with(|symbol| address(symbol));
+        unsafe {
+            gl::Enable(gl::DEBUG_OUTPUT);
+            gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
+            gl::DebugMessageCallback(Some(message_callback), 0 as *const c_void);
+
+            if multisample { gl::Enable(gl::MULTISAMPLE) }
+            if depth_test { gl::Enable(gl::DEPTH_TEST) }
+            match cull_face {
+                FaceCulling::Front => {
+                    gl::Enable(gl::CULL_FACE);
+                    gl::CullFace(gl::FRONT);
+                },
+                FaceCulling::Back => {
+                    gl::Enable(gl::CULL_FACE);
+                    gl::CullFace(gl::BACK);
+                },
+                FaceCulling::FrontAndBack => {
+                    gl::Enable(gl::CULL_FACE);
+                    gl::CullFace(gl::FRONT_AND_BACK);
+                }
+                _ => {}
+            }
+        }
+
+
         Renderer {
-            has_init: false,
             buffers: vec![],
             materials: vec![],
             attribute_queue: vec![],
-        }
-    }
-
-    // Loads the GL functions, therefore requiring a context to load their proc address
-    pub fn init<F>(&mut self, mut address: F, multisample: bool, depth_test: bool, cull_face: FaceCulling)
-        where F: FnMut(&'static str) -> *const c_void {
-        if !self.has_init {
-            gl::load_with(|symbol| { address(symbol) });
-            unsafe {
-                gl::Enable(gl::DEBUG_OUTPUT);
-                gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
-                gl::DebugMessageCallback(Some(message_callback), 0 as *const c_void);
-
-                if multisample { gl::Enable(gl::MULTISAMPLE) }
-                if depth_test { gl::Enable(gl::DEPTH_TEST) }
-                match cull_face {
-                    FaceCulling::Front => {
-                        gl::Enable(gl::CULL_FACE);
-                        gl::CullFace(gl::FRONT);
-                    },
-                    FaceCulling::Back => {
-                        gl::Enable(gl::CULL_FACE);
-                        gl::CullFace(gl::BACK);
-                    },
-                    FaceCulling::FrontAndBack => {
-                        gl::Enable(gl::CULL_FACE);
-                        gl::CullFace(gl::FRONT_AND_BACK);
-                    }
-                    _ => {}
-                }
-            }
-
-            self.has_init = true;
         }
     }
 
@@ -109,48 +126,29 @@ impl Renderer {
     // Creates an object with the given vertex count, positions, colors, indices, and material.
     // The Object Manager will draw the object when given the chance using the `render` function.
     pub fn create_object(&mut self,
-        vertex_count: u32,
-        positions: Vec<(f32, f32, f32)>,
-        mut colors: Vec<(f32, f32, f32, f32)>,
-        mut tex_coords: Vec<(f32, f32)>,
-        mut normals: Vec<(f32, f32, f32)>,
+        vertices: Vec<Vertex>,
         indices: Vec<u32>,
         material: Material) -> u32
     {
 
-        if !self.has_init { panic!("The renderer has not been initialized yet! Try calling `Renderer::init(&mut self, ...)`") }
-
-        let stride: f32 = positions.len() as f32 / vertex_count as f32;
-        if stride != (stride as usize) as f32 {
-            panic!("The `vertex_count` is incorrect");
+        let mut buffer_data: Vec<f32> = vec![];
+        for vertex in vertices.iter() {
+            buffer_data.extend(vec![
+                vertex.position.0,
+                vertex.position.1,
+                vertex.position.2,
+                vertex.color.0,
+                vertex.color.1,
+                vertex.color.2,
+                vertex.color.3,
+                vertex.tex_coords.0,
+                vertex.tex_coords.1,
+                vertex.normals.0,
+                vertex.normals.1,
+                vertex.normals.2,
+                vertex.texture_id
+            ]);
         }
-
-        if colors.len() == 0 { colors = vec![(1.0, 1.0, 1.0, 1.0); vertex_count as usize]; }
-        if tex_coords.len() == 0 { tex_coords = vec![(1.0, 1.0); vertex_count as usize]; }
-        if normals.len() == 0 { normals = vec![(1.0, 1.0, 1.0); vertex_count as usize]; }
-
-        let buffer_data: Vec<f32> = {
-            let mut buffer_data: Vec<f32> = vec![];
-
-            for i in 0..positions.len() {
-                buffer_data.extend(vec![
-                    positions[i].0,
-                    positions[i].1,
-                    positions[i].2,
-                    colors[i].0,
-                    colors[i].1,
-                    colors[i].2,
-                    colors[i].3,
-                    tex_coords[i].0,
-                    tex_coords[i].1,
-                    normals[i].0,
-                    normals[i].1,
-                    normals[i].2,
-                ]);
-            }
-
-            buffer_data
-        };
 
         let (vao, vbo, ibo) = unsafe {
             let mut vao = 0u32;
@@ -167,7 +165,7 @@ impl Renderer {
                 gl::DYNAMIC_DRAW,
             );
 
-            let stride: i32 = (FOUR_BYTES * (buffer_data.len() / vertex_count as usize)) as i32;
+            let stride: i32 = (FOUR_BYTES * (buffer_data.len() / vertices.len() as usize)) as i32;
 
             gl::EnableVertexAttribArray(0);
             gl::VertexAttribPointer(
@@ -176,7 +174,7 @@ impl Renderer {
                 gl::FLOAT,
                 gl::FALSE,
                 stride,
-                0 as *const c_void,
+                offset_of!(Vertex, position) as *const c_void,
             );
 
             gl::EnableVertexAttribArray(1);
@@ -186,7 +184,7 @@ impl Renderer {
                 gl::FLOAT,
                 gl::FALSE,
                 stride,
-                12 as *const c_void,
+                offset_of!(Vertex, color) as *const c_void,
             );
 
             gl::EnableVertexAttribArray(2);
@@ -196,7 +194,7 @@ impl Renderer {
                 gl::FLOAT,
                 gl::FALSE,
                 stride,
-                28 as *const c_void,
+                offset_of!(Vertex, tex_coords) as *const c_void,
             );
 
             gl::EnableVertexAttribArray(3);
@@ -206,7 +204,17 @@ impl Renderer {
                 gl::FLOAT,
                 gl::FALSE,
                 stride,
-                36 as *const c_void,
+                offset_of!(Vertex, normals) as *const c_void,
+            );
+
+            gl::EnableVertexAttribArray(4);
+            gl::VertexAttribPointer(
+                4,
+                1,
+                gl::FLOAT,
+                gl::FALSE,
+                stride,
+                offset_of!(Vertex, texture_id) as *const c_void,
             );
 
             let mut ibo = 0u32;
@@ -236,6 +244,29 @@ impl Renderer {
 
     pub fn set_material_attribute(&mut self, object: u32, n: &str, t: AttributeType) {
         self.attribute_queue[object as usize].push((n.to_string(), t));
+    }
+
+    // Changes the vertex/index data of a given object.
+    pub fn change_object(&mut self, object: u32, vertices: Option<Vec<Vertex>>, indices: Option<Vec<u32>>) {
+        unsafe {
+            match vertices {
+                Some(vertices) => {
+                    gl::BindBuffer(gl::ARRAY_BUFFER, self.buffers[object as usize].vbo);
+                    gl::BufferSubData(gl::ARRAY_BUFFER, 0, vertices.len() as isize * FOUR_BYTES as isize * VERTEX_DATA_SIZE,
+                                      vertices.as_ptr() as * const c_void);
+                }
+                _ => {}
+            }
+
+            match indices {
+                Some(indices) => {
+                    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.buffers[object as usize].ibo);
+                    gl::BufferSubData(gl::ELEMENT_ARRAY_BUFFER, 0, indices.len() as isize * FOUR_BYTES as isize,
+                                      indices.as_ptr() as * const c_void);
+                }
+                _ => {}
+            }
+        }
     }
 
     // Draws all created objects
