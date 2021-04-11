@@ -9,6 +9,7 @@ fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
+    glfw.window_hint(glfw::WindowHint::Samples(Some(4)));
 
     let (mut window, _) = glfw.create_window(800, 600, "Hello this is window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
@@ -19,7 +20,7 @@ fn main() {
     let mut renderer = Renderer::new(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front);
     renderer.set_debug_filters(vec![DebugFilter::Info]);
 
-    let mut vertices = vec![
+    let vertices = vec![
         Vertex {
             position: (-0.5,  0.5,  0.5),
             color: (1.0, 1.0, 1.0, 1.0),
@@ -79,15 +80,15 @@ fn main() {
     ];
 
     let object = renderer.create_object(
-        vertices.clone(),
-        vec![
+        Some(vertices),
+        Some(vec![
             0, 1, 2, 2, 3, 0,
             6, 7, 2, 2, 1, 6,
             4, 3, 2, 6, 5, 4,
             4, 7, 6, 2, 7, 4,
             4, 5, 0, 0, 3, 4,
             6, 1, 0, 0, 5, 6
-        ],
+        ]),
         Material::from_shader_files(
             "tests/vertex_shader.glsl",
             "tests/fragment_shader.glsl",
@@ -119,9 +120,9 @@ fn main() {
         renderer.set_material_attribute(object, "projection", AttributeType::Matrix4(
             projection.as_ptr()));
 
-        renderer.render();
+        renderer.render((0.0, 0.0, 0.0, 0.0));
 
-        time += 0.01;
+        time += 0.05;
 
         window.swap_buffers();
         glfw.poll_events();

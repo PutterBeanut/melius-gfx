@@ -4,10 +4,11 @@ use memoffset::offset_of;
 
 use crate::material::{Material, AttributeType, set_attribute};
 
+// The user defined filters in which the OpenGL callback will use to ignore certain debug messages.
 static mut DEBUG_FILTERS: [DebugFilter; 4] = [DebugFilter::None, DebugFilter::None, DebugFilter::None, DebugFilter::None];
 
 // The renderer takes in an array of DebugFilters to filter out one or more
-// specific types of messages from the OpenGL callbacks
+// specific types of messages from the OpenGL callbacks.
 #[derive(Copy, Clone)]
 pub enum DebugFilter {
     None,
@@ -126,116 +127,85 @@ impl Renderer {
     // Creates an object with the given vertex count, positions, colors, indices, and material.
     // The Object Manager will draw the object when given the chance using the `render` function.
     pub fn create_object(&mut self,
-        vertices: Vec<Vertex>,
-        indices: Vec<u32>,
+        vertices: Option<Vec<Vertex>>,
+        indices: Option<Vec<u32>>,
         material: Material) -> u32
     {
 
-        let mut buffer_data: Vec<f32> = vec![];
-        for vertex in vertices.iter() {
-            buffer_data.extend(vec![
-                vertex.position.0,
-                vertex.position.1,
-                vertex.position.2,
-                vertex.color.0,
-                vertex.color.1,
-                vertex.color.2,
-                vertex.color.3,
-                vertex.tex_coords.0,
-                vertex.tex_coords.1,
-                vertex.normals.0,
-                vertex.normals.1,
-                vertex.normals.2,
-                vertex.texture_id
-            ]);
-        }
-
-        let (vao, vbo, ibo) = unsafe {
+        let (vao, vbo, ibo, index_size) = unsafe {
             let mut vao = 0u32;
             gl::GenVertexArrays(1, &mut vao);
             gl::BindVertexArray(vao);
 
             let mut vbo = 0u32;
-            gl::GenBuffers(1, &mut vbo);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                (FOUR_BYTES * buffer_data.len()) as isize,
-                buffer_data.as_ptr() as *const c_void,
-                gl::DYNAMIC_DRAW,
-            );
+            match vertices {
+                Some(vertex_data) => {
+                    let mut buffer_data: Vec<f32> = vec![];
+                    for vertex in vertex_data.iter() {
+                        buffer_data.extend(vec![
+                            vertex.position.0,
+                            vertex.position.1,
+                            vertex.position.2,
+                            vertex.color.0,
+                            vertex.color.1,
+                            vertex.color.2,
+                            vertex.color.3,
+                            vertex.tex_coords.0,
+                            vertex.tex_coords.1,
+                            vertex.normals.0,
+                            vertex.normals.1,
+                            vertex.normals.2,
+                            vertex.texture_id
+                        ]);
+                    }
 
-            let stride: i32 = (FOUR_BYTES * (buffer_data.len() / vertices.len() as usize)) as i32;
+                    gl::GenBuffers(1, &mut vbo);
+                    gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+                    gl::BufferData(
+                        gl::ARRAY_BUFFER,
+                        (FOUR_BYTES * buffer_data.len()) as isize,
+                        buffer_data.as_ptr() as *const c_void,
+                        gl::DYNAMIC_DRAW,
+                    );
+                },
+                None => {}
+            }
 
-            gl::EnableVertexAttribArray(0);
-            gl::VertexAttribPointer(
-                0,
-                3,
-                gl::FLOAT,
-                gl::FALSE,
-                stride,
-                offset_of!(Vertex, position) as *const c_void,
-            );
+            let stride: i32 = (VERTEX_DATA_SIZE * FOUR_BYTES as isize) as i32;
+            Renderer::enable_vertex_attrib_ptr(0, 3, stride, offset_of!(Vertex, position));
+            Renderer::enable_vertex_attrib_ptr(1, 4, stride, offset_of!(Vertex, color));
+            Renderer::enable_vertex_attrib_ptr(2, 2, stride, offset_of!(Vertex, tex_coords));
+            Renderer::enable_vertex_attrib_ptr(3, 3, stride, offset_of!(Vertex, normals));
+            Renderer::enable_vertex_attrib_ptr(4, 1, stride, offset_of!(Vertex, texture_id));
 
-            gl::EnableVertexAttribArray(1);
-            gl::VertexAttribPointer(
-                1,
-                4,
-                gl::FLOAT,
-                gl::FALSE,
-                stride,
-                offset_of!(Vertex, color) as *const c_void,
-            );
-
-            gl::EnableVertexAttribArray(2);
-            gl::VertexAttribPointer(
-                2,
-                2,
-                gl::FLOAT,
-                gl::FALSE,
-                stride,
-                offset_of!(Vertex, tex_coords) as *const c_void,
-            );
-
-            gl::EnableVertexAttribArray(3);
-            gl::VertexAttribPointer(
-                3,
-                3,
-                gl::FLOAT,
-                gl::FALSE,
-                stride,
-                offset_of!(Vertex, normals) as *const c_void,
-            );
-
-            gl::EnableVertexAttribArray(4);
-            gl::VertexAttribPointer(
-                4,
-                1,
-                gl::FLOAT,
-                gl::FALSE,
-                stride,
-                offset_of!(Vertex, texture_id) as *const c_void,
-            );
-
+            let index_size;
             let mut ibo = 0u32;
-            gl::GenBuffers(1, &mut ibo);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
-            gl::BufferData(
-                gl::ELEMENT_ARRAY_BUFFER,
-                (FOUR_BYTES * indices.len()) as isize,
-                indices.as_ptr() as *const c_void,
-                gl::DYNAMIC_DRAW,
-            );
+            match indices {
+                Some(index_data) => {
+                    gl::GenBuffers(1, &mut ibo);
+                    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
+                    gl::BufferData(
+                        gl::ELEMENT_ARRAY_BUFFER,
+                        (FOUR_BYTES * index_data.len()) as isize,
+                        index_data.as_ptr() as *const c_void,
+                        gl::DYNAMIC_DRAW,
+                    );
 
-            (vao, vbo, ibo)
+                    index_size = index_data.len() as i32;
+                },
+                None => { index_size = 0i32; }
+            }
+
+            (vao, vbo, ibo, index_size)
         };
 
         self.buffers.push(Buffers {
             vao,
             vbo,
             ibo,
-            index_size: indices.len() as i32,
+            index_size,
         });
+
         self.materials.push(material);
         self.attribute_queue.push(vec![]);
 
@@ -253,9 +223,9 @@ impl Renderer {
                 Some(vertices) => {
                     gl::BindBuffer(gl::ARRAY_BUFFER, self.buffers[object as usize].vbo);
                     gl::BufferSubData(gl::ARRAY_BUFFER, 0, vertices.len() as isize * FOUR_BYTES as isize * VERTEX_DATA_SIZE,
-                                      vertices.as_ptr() as * const c_void);
+                                      vertices.as_ptr() as *const c_void);
                 }
-                _ => {}
+                None => {}
             }
 
             match indices {
@@ -263,16 +233,18 @@ impl Renderer {
                     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.buffers[object as usize].ibo);
                     gl::BufferSubData(gl::ELEMENT_ARRAY_BUFFER, 0, indices.len() as isize * FOUR_BYTES as isize,
                                       indices.as_ptr() as * const c_void);
+
+                    self.buffers[object as usize].index_size = indices.len() as i32;
                 }
-                _ => {}
+                None => {}
             }
         }
     }
 
-    // Draws all created objects
-    pub fn render(&mut self) {
+    // Draws all created objects using their buffers
+    pub fn render(&mut self, bg_color: (f32, f32, f32, f32)) {
         unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+            gl::ClearColor(bg_color.0, bg_color.1, bg_color.2, bg_color.3);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             let mut i = 0usize;
@@ -285,22 +257,13 @@ impl Renderer {
                 }
                 self.attribute_queue[i] = Vec::new();
 
-                if object.ibo == 0 {
-                    gl::BindBuffer(gl::ARRAY_BUFFER, object.vbo);
-                    gl::DrawArrays(
-                        gl::TRIANGLES,
-                        0,
-                        object.index_size,
-                    );
-                } else {
-                    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, object.ibo);
-                    gl::DrawElements(
-                        gl::TRIANGLES,
-                        object.index_size,
-                        gl::UNSIGNED_INT,
-                        ptr::null(),
-                    );
-                }
+                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, object.ibo);
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    object.index_size,
+                    gl::UNSIGNED_INT,
+                    ptr::null(),
+                );
 
                 i += 1;
             }
@@ -326,6 +289,20 @@ impl Renderer {
             }
 
             i += 1;
+        }
+    }
+
+    pub fn enable_vertex_attrib_ptr(index: u32, size: i32, stride: i32, offset: usize) {
+        unsafe {
+            gl::EnableVertexAttribArray(index);
+            gl::VertexAttribPointer(
+                index,
+                size,
+                gl::FLOAT,
+                gl::FALSE,
+                stride,
+                offset as *const c_void,
+            );
         }
     }
 }
