@@ -1,6 +1,6 @@
 [package]
 name = "meliusgfx"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2018"
 license = "Apache-2.0"
 authors = ["PutterBeanut <putterbeanutdev@gmail.com>"]
@@ -12,7 +12,5 @@ categories = ["graphics", "gui"]
 
 [dependencies]
 gl = "0.14.0"
-glfw = "0.41.0"
-cgmath = "0.18.0"
 image = "0.23.14"
 memoffset = "0.6"
