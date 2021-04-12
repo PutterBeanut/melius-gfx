@@ -6,12 +6,8 @@ layout (location = 2) in vec2 texCoords;
 out vec4 fragmentColor;
 out vec2 fragmentTexCoords;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
 void main() {
     fragmentColor = vertexColor;
     fragmentTexCoords = texCoords;
-    gl_Position = projection * view * model * vec4(vertexPosition, 1);
+    gl_Position = vec4(vertexPosition, 1);
 }

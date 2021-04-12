@@ -11,7 +11,7 @@ fn main() {
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
     glfw.window_hint(glfw::WindowHint::Samples(Some(4)));
 
-    let (mut window, _) = glfw.create_window(800, 600, "Hello this is window", glfw::WindowMode::Windowed)
+    let (mut window, _) = glfw.create_window(800, 600, "Test Window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
     window.set_key_polling(true);
@@ -105,25 +105,8 @@ fn main() {
         ),
     );
 
-    let mut time = 0f32;
     while !window.should_close() {
-
-        let projection: Matrix4<f32> = perspective(Deg(90.0),
-                                                   800.0 / 600.0, 0.1, 1000.0);
-        let mut model: Matrix4<f32> = Matrix4::<f32>::from_angle_x(Deg(time));
-        model = model * Matrix4::from_angle_z(Deg(time));
-
-        renderer.set_material_attribute(object, "model", AttributeType::Matrix4(
-            model.as_ptr()));
-        renderer.set_material_attribute(object, "view", AttributeType::Matrix4(
-            Matrix4::<f32>::from_translation(vec3(0.0, 0.0, -2.0)).as_ptr()));
-        renderer.set_material_attribute(object, "projection", AttributeType::Matrix4(
-            projection.as_ptr()));
-
         renderer.render((0.0, 0.0, 0.0, 0.0));
-
-        time += 0.05;
-
         window.swap_buffers();
         glfw.poll_events();
     }
