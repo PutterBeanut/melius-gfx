@@ -4,9 +4,6 @@ use memoffset::offset_of;
 
 use crate::material::{Material, AttributeType, set_attribute};
 
-// The user defined filters in which the OpenGL callback will use to ignore certain debug messages.
-static mut DEBUG_FILTERS: [DebugFilter; 4] = [DebugFilter::None, DebugFilter::None, DebugFilter::None, DebugFilter::None];
-
 // The renderer takes in an array of DebugFilters to filter out one or more
 // specific types of messages from the OpenGL callbacks.
 #[derive(Copy, Clone)]
@@ -81,13 +78,13 @@ pub struct Renderer {
 #[allow(unused_assignments)]
 impl Renderer {
     // Loads the GL functions, therefore requiring a context to load their proc address
-    pub fn new<F>(mut address: F, multisample: bool, depth_test: bool, cull_face: FaceCulling) -> Self
+    pub fn new<F>(mut address: F, multisample: bool, depth_test: bool, cull_face: FaceCulling, debug_filters:  Vec<DebugFilter>) -> Self
         where F: FnMut(&'static str) -> *const c_void {
         gl::load_with(|symbol| address(symbol));
         unsafe {
             gl::Enable(gl::DEBUG_OUTPUT);
             gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
-            gl::DebugMessageCallback(Some(message_callback), 0 as *const c_void);
+            gl::DebugMessageCallback(Some(message_callback), Box::into_raw(Box::new(debug_filters)).cast());
 
             if multisample { gl::Enable(gl::MULTISAMPLE) }
             if depth_test { gl::Enable(gl::DEPTH_TEST) }
@@ -113,14 +110,6 @@ impl Renderer {
             buffers: vec![],
             materials: vec![],
             attribute_queue: vec![],
-        }
-    }
-
-    pub fn set_debug_filters(&self, filters: Vec<DebugFilter>) {
-        if filters.len() > 4 { panic!("Cannot have a debug filter count greater than 4!") }
-
-        for i in 0..filters.len() {
-            unsafe { DEBUG_FILTERS[i] = filters[i].clone(); }
         }
     }
 
@@ -307,53 +296,46 @@ impl Renderer {
     }
 }
 
-extern "system" fn message_callback(_: u32, _:  u32, _: u32, severity: u32, _: i32, message: *const i8, _: *mut c_void) {
+extern "system" fn message_callback(_: u32, _:  u32, _: u32, severity: u32, _: i32, message: *const i8, user_param: *mut c_void) {
+    let debug_filters = unsafe { user_param.cast::<Vec<DebugFilter>>().as_ref().unwrap().clone() };
     let mut severity_str = String::new();
     let mut is_filtered = false;
 
     if severity == gl::DEBUG_SEVERITY_NOTIFICATION {
-        unsafe {
-            for filter in DEBUG_FILTERS.iter() {
-                match filter {
-                    DebugFilter::Info => { is_filtered = true; }
-                    _ => {}
-                }
+        for filter in debug_filters.iter() {
+            match filter {
+                DebugFilter::Info => { is_filtered = true; }
+                _ => {}
             }
         }
 
         severity_str = "Notification".to_string()
     }
     if severity == gl::DEBUG_SEVERITY_LOW {
-        unsafe {
-            for filter in DEBUG_FILTERS.iter() {
+            for filter in debug_filters.iter() {
                 match filter {
                     DebugFilter::Low => { is_filtered = true; }
                     _ => {}
                 }
             }
-        }
 
         severity_str = "Low".to_string()
     }
     if severity == gl::DEBUG_SEVERITY_MEDIUM {
-        unsafe {
-            for filter in DEBUG_FILTERS.iter() {
-                match filter {
-                    DebugFilter::Medium => { is_filtered = true; }
-                    _ => {}
-                }
+        for filter in debug_filters.iter() {
+            match filter {
+                DebugFilter::Medium => { is_filtered = true; }
+                _ => {}
             }
         }
 
         severity_str = "Medium".to_string()
     }
     if severity == gl::DEBUG_SEVERITY_HIGH {
-        unsafe {
-            for filter in DEBUG_FILTERS.iter() {
-                match filter {
-                    DebugFilter::High => { is_filtered = true; }
-                    _ => {}
-                }
+        for filter in debug_filters.iter() {
+            match filter {
+                DebugFilter::High => { is_filtered = true; }
+                _ => {}
             }
         }
 

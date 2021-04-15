@@ -4,6 +4,8 @@ in vec2 fragmentTexCoords;
 
 uniform sampler2D texture0;
 
+out vec4 FragColor;
+
 void main() {
-    gl_FragColor = texture(texture0, fragmentTexCoords) * fragmentColor;
+    FragColor = texture(texture0, fragmentTexCoords) * fragmentColor;
 }

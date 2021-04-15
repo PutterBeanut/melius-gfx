@@ -1,4 +1,4 @@
-use meliusgfx::material::{Material, AttributeType};
+use meliusgfx::material::Material;
 use meliusgfx::texture::{Texture, WrappingType, FilteringType};
 use meliusgfx::render::{Renderer, FaceCulling, DebugFilter, Vertex};
 use glfw::Context;
@@ -17,8 +17,7 @@ fn main() {
     window.set_key_polling(true);
     window.make_current();
 
-    let mut renderer = Renderer::new(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front);
-    renderer.set_debug_filters(vec![DebugFilter::Info]);
+    let mut renderer = Renderer::new(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]);
 
     let vertices = vec![
         Vertex {
@@ -79,15 +78,10 @@ fn main() {
         },
     ];
 
-    let object = renderer.create_object(
+    let _ = renderer.create_object(
         Some(vertices),
         Some(vec![
             0, 1, 2, 2, 3, 0,
-            6, 7, 2, 2, 1, 6,
-            4, 3, 2, 6, 5, 4,
-            4, 7, 6, 2, 7, 4,
-            4, 5, 0, 0, 3, 4,
-            6, 1, 0, 0, 5, 6
         ]),
         Material::from_shader_files(
             "tests/vertex_shader.glsl",
