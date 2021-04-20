@@ -1,4 +1,4 @@
-use meliusgfx::material::Material;
+use meliusgfx::material::{Material, AttributeType};
 use meliusgfx::texture::{Texture, WrappingType, FilteringType};
 use meliusgfx::render::{Renderer, FaceCulling, DebugFilter, Vertex};
 use glfw::Context;
@@ -17,7 +17,7 @@ fn main() {
     window.set_key_polling(true);
     window.make_current();
 
-    let mut renderer = Renderer::new(|address| { window.get_proc_address(address) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]);
+    let mut renderer = Renderer::new(|x| { window.get_proc_address(x) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]);
 
     let vertices = vec![
         Vertex {
@@ -78,11 +78,31 @@ fn main() {
         },
     ];
 
-    let _ = renderer.create_object(
-        Some(vertices),
+    let my_triangle = renderer.create_object(
         Some(vec![
-            0, 1, 2, 2, 3, 0,
+            Vertex {
+                position: (-0.5, -0.5, 0.0),
+                color: (1.0, 1.0, 1.0, 1.0),
+                tex_coords: ( 0.0,  0.0),
+                normals: (0.0, 0.0, 0.0),
+                texture_id: 0.0
+            },
+            Vertex {
+                position: ( 0.0,  0.5, 0.0),
+                color: (1.0, 1.0, 1.0, 1.0),
+                tex_coords: ( 0.5,  1.0),
+                normals: (0.0, 0.0, 0.0),
+                texture_id: 0.0
+            },
+            Vertex {
+                position: ( 0.5, -0.5, 0.0),
+                color: (1.0, 1.0, 1.0, 1.0),
+                tex_coords: ( 1.0,  0.0),
+                normals: (0.0, 0.0, 0.0),
+                texture_id: 0.0
+            },
         ]),
+        Some(vec![0, 1, 2]),
         Material::from_shader_files(
             "tests/vertex_shader.glsl",
             "tests/fragment_shader.glsl",
@@ -95,7 +115,9 @@ fn main() {
                     Texture::get_from_location("wall.jpg")
                 )
             ],
-            vec![],
+            vec![
+                ("time", AttributeType::Float1(0.1))
+            ],
         ),
     );
 
