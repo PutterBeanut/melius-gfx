@@ -2,7 +2,7 @@
 A Safe OpenGL wrapper library for Melius.
 
 ## Example
-#### NOTE: THIS EXAMPLE ASSUMES KNOWLEDGE OF CONTEXT LIBRARIES (glfw-rs, glutin, etc.) AND OPENGL
+#### NOTE: THIS EXAMPLE ASSUMES KNOWLEDGE OF CONTEXT LIBRARIES (glfw-rs, glutin, etc.) AND OPENGL (preferably C++ OpenGL or gl-rs)
 
 ### Getting started:
 To install melius-gfx, just chuck this line of code (is toml *technically* code?) into your Cargo.toml file: ```toml
