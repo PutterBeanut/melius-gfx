@@ -5,8 +5,7 @@ A Safe OpenGL wrapper library for Melius.
 #### NOTE: THIS EXAMPLE ASSUMES KNOWLEDGE OF CONTEXT LIBRARIES (glfw-rs, glutin, etc.) AND OPENGL (preferably C++ OpenGL or gl-rs)
 
 ### Getting started:
-To install melius-gfx, just chuck this line of code (is toml *technically* code?) into your Cargo.toml file: ```toml
-meliusgfx = "1.1.2"```
+To install melius-gfx, just chuck this line of code (is toml *technically* code?) into your Cargo.toml file: `meliusgfx = "1.1.2"`
 
 melius-gfx makes it relatively easy to call MOST of the OpenGL functions without needing a single `unsafe {}` block. To get started,
 we must create a `Renderer`. The renderer contains all the "objects" (which are just all the needed buffers) and functions to manipulate
