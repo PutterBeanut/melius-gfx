@@ -1,10 +1,10 @@
 # melius-gfx
 A Safe OpenGL wrapper library for Melius.
 
-## Example
+# Example
 #### NOTE: THIS EXAMPLE ASSUMES KNOWLEDGE OF CONTEXT LIBRARIES (glfw-rs, glutin, etc.) AND OPENGL (preferably C++ OpenGL or gl-rs)
 
-### Getting started:
+# Getting started:
 To install melius-gfx, just chuck this line of code (is toml *technically* code?) into your Cargo.toml file: `meliusgfx = "1.1.2"`
 
 melius-gfx makes it relatively easy to call MOST of the OpenGL functions without needing a single `unsafe {}` block. To get started,
@@ -38,7 +38,7 @@ YAY! You made it to the end... of what takes up one line of code. Here's an exam
 let mut renderer = Renderer::new(|x| { window.get_proc_address(x) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]); // Enable depth testing and multisampling, set the face culling to only Front faces, and filter out any `Info` debug messages.
 ```
 
-### Creating an "object"
+## Creating an "object"
 It gets generally easy from here... I think.
 
 Creating an "object" is defined like this:
@@ -124,7 +124,7 @@ Then we can simply input this code at the top of the while loop: `renderer.rende
 If you did everything right, you should see something like this (if not then please start an issue if necessary):
 ![triangle](https://github.com/PutterBeanut/melius-gfx/blob/main/example/triangle.png)
 
-### Modifying an "object"
+## Modifying an "object"
 We can modify an object in two ways (at least that *I* can think of): Setting the shader attributes or changing the vertex and index buffers. To set the shader attributes (that are likely to change every frame), you would call:
 ```rust
 renderer.set_material_attribute(my_triangle, "myAttribute", AttributeType::Float1(my_attribute_value));
