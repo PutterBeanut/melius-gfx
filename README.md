@@ -123,7 +123,7 @@ while !window.should_close() {
 Then we can simply input this code at the top of the while loop: `renderer.render((1.0, 1.0, 1.0, 1.0))`, in which the four float tuple is what the background color should be.
 
 If you did everything right, you should see something like this (if not then please start an issue if necessary):
-![triangle](https://github.com/PutterBeanut/melius-gfx/example/triangle.png)
+![triangle](https://github.com/PutterBeanut/melius-gfx/blob/main/example/triangle.png)
 
 ### Modifying an "object"
 We can modify an object in two ways (at least that *I* can think of): Setting the shader attributes or changing the vertex and index buffers. To set the shader attributes (that are likely to change every frame), you would call:
