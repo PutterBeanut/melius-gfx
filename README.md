@@ -65,6 +65,7 @@ Material::from_shader_files(
     ],
 );
 ```
+The `Material` struct also has a `from_shaders` function, where the only difference is that the first two arguments of `from_shader_files` are strings containing the source code of the shaders as opposed to a path to a file containing the shader source code.
 
 Remember that the `create_object` function returns a `u32` value which is considered to be the "object's" "id," which can later be used to modify the "object."
 Here's an example of an "object" being created:
