@@ -19,65 +19,6 @@ fn main() {
 
     let mut renderer = Renderer::new(|x| { window.get_proc_address(x) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]);
 
-    let vertices = vec![
-        Vertex {
-            position: (-0.5,  0.5,  0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: (-0.5,  0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: ( 0.5,  0.5,  0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: ( 0.5,  0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: ( 0.5, -0.5,  0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: ( 0.5, -0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: (-0.5, -0.5,  0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: (-0.5, -0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: (-0.5, -0.5, -0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: (-0.5, -0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: (-0.5,  0.5, -0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: (-0.5,  0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: ( 0.5,  0.5, -0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: ( 0.5,  0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-        Vertex {
-            position: ( 0.5, -0.5, -0.5),
-            color: (1.0, 1.0, 1.0, 1.0),
-            tex_coords: ( 0.5, -0.5),
-            normals: (0.0, 0.0, 0.0),
-            texture_id: 0.0
-        },
-    ];
-
     let my_triangle = renderer.create_object(
         Some(vec![
             Vertex {
