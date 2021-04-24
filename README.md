@@ -35,7 +35,8 @@ A debug filter is an enum with the following severity levels: `Info, Low, Medium
 
 YAY! You made it to the end... of what takes up one line of code. Here's an example of it all put together:
 ```rust
-let mut renderer = Renderer::new(|x| { window.get_proc_address(x) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]); // Enable depth testing and multisampling, set the face culling to only Front faces, and filter out any `Info` debug messages.
+// Enable depth testing and multisampling, set the face culling to only Front faces, and filter out any `Info` debug messages.
+let mut renderer = Renderer::new(|x| { window.get_proc_address(x) }, true, true, FaceCulling::Front, vec![DebugFilter::Info]);
 ```
 
 ## Creating an "object"
